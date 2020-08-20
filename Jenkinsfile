@@ -8,6 +8,11 @@ pipeline {
      }
 
     stages {
+        stage('clone repository'){
+             steps{
+                 git 'https://github.com/Bwangari/gallery.git'
+             }
+         }
         stage('Build') {
             steps {
                 echo 'Building..'
