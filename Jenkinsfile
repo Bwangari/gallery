@@ -61,6 +61,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying...'
+        withCredentials([usernameColonPassword(credentialsId: 'heroku', variable: 'HEROKU_CREDENTIALS' )]){
+       sh 'git push https://${HEROKU_CREDENTIALS}@git.heroku.com/gallery-pipeline.git master'
+    }
             }
         }
     }
