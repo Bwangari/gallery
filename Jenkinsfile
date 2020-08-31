@@ -2,6 +2,7 @@ pipeline {
     agent any
      tools{
          gradle "Gradle-6"
+         nodejs "node"
      }
      post {
         success {
@@ -44,6 +45,9 @@ pipeline {
              }
          }
         stage('Build') {
+            steps {
+                sh 'npm install' 
+            }
             steps {
                 echo 'Building..'
                 echo "building version ${New_VERSION}"
