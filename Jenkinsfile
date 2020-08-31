@@ -64,6 +64,7 @@ pipeline {
             }
         }
     }
+}
     def notifySlack(String buildStatus = 'STARTED') {
     // Build status of null means success.
     buildStatus = buildStatus ?: 'SUCCESS'
@@ -96,5 +97,4 @@ node {
     } finally {
         notifySlack(currentBuild.result)
     }
-}
 }
