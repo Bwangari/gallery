@@ -65,36 +65,67 @@ pipeline {
         }
     }
 }
-    def notifySlack(String buildStatus = 'STARTED') {
-    // Build status of null means success.
-    buildStatus = buildStatus ?: 'SUCCESS'
+    post {
+        success {
+            notifyBuild('SUCCESSFUL')
 
-    def color
+            emailext attachLog: true,
+                body: EMAIL_BODY,
+                subject: EMAIL_SUBJECT_SUCCESS,
+                to: EMAIL_RECEPIENT
+        }
 
-    if (buildStatus == 'STARTED') {
-        color = '#D4DADF'
-    } else if (buildStatus == 'SUCCESS') {
-        color = '#BDFFC3'
-    } else if (buildStatus == 'UNSTABLE') {
-        color = '#FFFE89'
-    } else {
-        color = '#FF9FA1'
+        failure {
+            notifyBuild('FAILED')
+
+            emailext attachLog: true,
+               body: EMAIL_BODY ,
+               subject: EMAIL_SUBJECT_FAILURE,
+               to: EMAIL_RECEPIENT
+        }
     }
-
-    def msg = "${buildStatus}: `${env.JOB_NAME}` #${env.BUILD_NUMBER}:\n${env.BUILD_URL}"
-
-    slackSend(color: color, message: msg)
 }
 
-node {
-    try {
-        notifySlack()
+def notifyBuild(String buildStatus = 'STARTED') {
+  // build status of null means successful
+  buildStatus =  buildStatus ?: 'SUCCESSFUL'
 
-        // Existing build steps.
-    } catch (e) {
-        currentBuild.result = 'FAILURE'
-        throw e
-    } finally {
-        notifySlack(currentBuild.result)
-    }
+  // Default values
+  def colorName = 'RED'
+  def colorCode = '#FF0000'
+  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+  def summary = "${subject} (${env.BUILD_URL})"
+
+  // Override default values based on build status
+  if (buildStatus == 'STARTED') {
+    color = 'YELLOW'
+    colorCode = '#FFFF00'
+    summary = "${subject} :aaw_yeah: (${env.BUILD_URL})"
+  } else if (buildStatus == 'SUCCESSFUL') {
+    color = 'GREEN'
+    colorCode = '#00FF00'
+    summary = """
+    :sunglasses:
+    ```
+      ${subject}\n\n
+
+      View console output here\n
+      ${env.BUILD_URL}\n
+
+      Site Link:\n
+      https://gallery-pipeline.herokuapp.com\n
+
+      Repo Link:\n
+      https://github.com/Bwangari/gallery.git\n
+    ```
+    :v:
+    """
+  } else {
+    color = 'RED'
+    colorCode = '#FF0000'
+    summary = "${subject} :coffin_dance: (${env.BUILD_URL})"
+  }
+
+  // Send notifications
+  slackSend (color: colorCode, message: summary)
 }
